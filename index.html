@@ -1,32 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Molecule Viewer</title>
-    <script src="https://3Dmol.org/build/3Dmol-min.js"></script>
-    <style>
-        #viewer {
-            width: 100%;
-            height: 500px;
-            border: 1px solid black;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Molecule Viewer</title>
+  <!-- Include 3Dmol.js from its CDN -->
+  <script src="https://3Dmol.org/build/3Dmol-min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+    }
+    #viewer {
+      width: 100%;
+      height: 100vh;
+      box-sizing: border-box;
+    }
+  </style>
 </head>
 <body>
-    <h1>Interactive Molecule Viewer</h1>
-    <div id="viewer"></div>
-    <script>
-        let viewer = $3Dmol.createViewer("viewer", { backgroundColor: "white" });
 
-        fetch("Methane.mol") // Load exported Mol file
-            .then(response => response.text())
-            .then(molData => {
-                viewer.addModel(molData, "mol"); // Add molecular data
-                viewer.setStyle({}, {stick: {}}); // Render style
-                viewer.zoomTo();
-                viewer.render();
-            });
-    </script>
+<div id="viewer"></div>
+
+<script>
+  // ------------------------------------------------------------
+  // 1) Parse the URL after "index.html/" to get the molecule name
+  //    Example:  https://example.com/index.html/Methane
+  //    We'll extract "Methane" and then fetch "Methane.mol"
+  // ------------------------------------------------------------
+
+  // Grab the full pathname, split by '/' into an array
+  const pathParts = window.location.pathname.split('/');
+
+  // The last part should be the molecule name, if provided
+  let lastPart = pathParts[pathParts.length - 1];
+
+  // If the last part contains 'index.html' or is empty, default to something
+  if (!lastPart || lastPart.includes('index.html')) {
+    // Default molecule name (optional)
+    lastPart = 'Methane';
+  }
+
+  // Build the filename (e.g., "Methane.mol")
+  const molFileName = lastPart + '.mol';
+
+  // ------------------------------------------------------------
+  // 2) Create a 3Dmol.js viewer and load the molecule
+  // ------------------------------------------------------------
+  let viewer = $3Dmol.createViewer('viewer', { backgroundColor: 'white' });
+
+  // Fetch the .mol file from the same directory
+  fetch(molFileName)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('File not found: ' + molFileName);
+      }
+      return response.text();
+    })
+    .then(molData => {
+      // Add the MOL data to the viewer
+      viewer.addModel(molData, "mol");
+
+      // ------------------------------------------------------------
+      // 3) Set the visualization style: ball-and-stick
+      // ------------------------------------------------------------
+      viewer.setStyle({}, { stick: {} });
+
+      // Zoom to fit
+      viewer.zoomTo();
+      viewer.render();
+    })
+    .catch(err => {
+      console.error('Error loading molecule:', err);
+      // Optionally display an error message on the page
+    });
+</script>
 </body>
 </html>
